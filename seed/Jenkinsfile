@@ -1,0 +1,17 @@
+pipeline {
+  agent any
+   
+  stages {
+    stage('Create Jenkins jobs') {
+      steps {
+        script {
+          jobDsl targets: 'seed/*.jobdsl',
+          removedJobAction: 'IGNORE',
+          removedViewAction: 'IGNORE',
+          lookupStrategy: 'SEED_JOB'
+        }
+      }
+    }
+  }
+}
+

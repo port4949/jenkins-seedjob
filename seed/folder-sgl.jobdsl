@@ -1,0 +1,4 @@
+folder('space-grade-linux') {
+    displayName('Space Grade Linux')
+    description('Jobs related to SGL')
+}
