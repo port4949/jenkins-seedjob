@@ -1,0 +1,42 @@
+matrixJob('space-grade-linux/platform-build-matrix') {
+
+    displayName('SGL: Platform Build Matrix')
+
+    axes {
+        textAxis {
+            name('CONFIGURATION')
+            valueString('sgl-scarthgap sgl-scarthgap-spaceros-jazzy-2026.07-core sgl-scarthgap-spaceros-jazzy-2026.07')
+            orientation('VERTICAL')
+        }
+        textAxis {
+            name('MACHINE')
+            valueString('beaglev-fire pic64hpsc qemuarm64 qemuriscv64 qemux86-64')
+            orientation('HORIZONTAL')
+        }
+    }
+
+    // Don't eat all worker
+    runSequentially(true)
+    wrappers {
+        timestamps()
+    }
+
+    // Don't build pic64hpsc with spaceros
+    combinationFilter('!(MACHINE == "pic64hpsc" && (CONFIGURATION == "sgl-scarthgap-spaceros-jazzy-2026.07-core" || CONFIGURATION == "sgl-scarthgap-spaceros-jazzy-2026.07"))')
+
+    steps {
+        downstreamParameterized {
+            trigger('space-grade-linux/platform-build') {
+                block {
+                    buildStepFailure('FAILURE')
+                    failure('FAILURE')
+                    unstable('UNSTABLE')
+                }
+                parameters {
+                    predefinedProp('CONFIGURATION', '${CONFIGURATION}')
+                    predefinedProp('MACHINE', '${MACHINE}')
+                }
+            }
+        }
+    }
+}
