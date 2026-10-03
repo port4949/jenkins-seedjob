@@ -1,0 +1,57 @@
+pipelineJob('space-grade-linux/platform-build') {
+    displayName('SGL: Platform Build')
+    description('SGL: Build a configuration from kas.')
+
+    parameters {
+        choiceParam('MACHINE', ['beaglev-fire', \
+                                'pic64hpsc', \
+                                'qemuarm64', \
+                                'qemuriscv64',\
+                                'qemux86-64'])
+
+        choiceParam('CONFIGURATION', ['sgl-scarthgap', \
+                                     'sgl-scarthgap-spaceros-jazzy-2026.07-core', \
+                                     'sgl-scarthgap-spaceros-jazzy-2026.07'])
+    }
+
+    definition {
+        cps {
+            sandbox()
+            script('''
+
+pipeline {
+    options {
+        disableConcurrentBuilds()
+    }
+    agent any
+
+    stages {
+        stage('kas checkout') {
+            steps {
+                script {
+                    currentBuild.displayName = "#${env.BUILD_NUMBER} | ${CONFIGURATION} ${MACHINE}"
+                }
+                git branch: 'main', url: 'https://github.com/port4949/meta-sgl.git'
+                sh 'kas checkout kas/${CONFIGURATION}-${MACHINE}.yml'
+            }
+        }
+        stage('kas build') {
+            steps {
+                git branch: 'main', url: 'https://github.com/port4949/meta-sgl.git'
+                sh 'kas build kas/${CONFIGURATION}-${MACHINE}.yml'
+            }
+        }
+    }
+     post {
+        success {
+            archiveArtifacts artifacts: "build/tmp-glibc/deploy/images/${MACHINE}/**/core-image-minimal-*.rootfs-*.wic.gz, build/tmp-glibc/deploy/images/${MACHINE}/**/core-image-minimal-*.rootfs-*.wic.bmap",
+                             fingerprint: true,
+                             allowEmptyArchive: true
+        }
+    }
+}
+
+''')
+        }
+    }
+}
